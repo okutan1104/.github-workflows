@@ -5,47 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>MISSION CONTROL OS v5</title>
+    <title>MISSION CONTROL OS v5.1</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@400;700&display=swap');
         body { font-family: 'JetBrains Mono', monospace; background: #000; color: #fff; overscroll-behavior: none; }
         .font-header { font-family: 'Syncopate', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.01); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); }
-        .neon-blue { color: #3b82f6; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
         .trade-win { color: #10b981; }
         .trade-loss { color: #f43f5e; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 2px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #3b82f6; border-radius: 50%; }
+        .card-anim { transition: all 0.3s ease; }
+        .card-anim:hover { background: rgba(255,255,255,0.05); transform: translateY(-4px); }
     </style>
 </head>
 <body class="pb-10">
 
-    <div id="view-dashboard" class="transition-opacity duration-500">
+    <div id="view-dashboard">
         <nav class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <div class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
                 <h1 class="text-[10px] font-header tracking-[0.3em] text-blue-500 uppercase">Strategy_Command_Center</h1>
             </div>
-            <div id="global-pnl" class="font-header text-xs tracking-tighter">PNL: <span id="stat-pnl-all">0</span></div>
+            <div class="font-header text-xs tracking-tighter">PNL: <span id="stat-pnl-all">0</span></div>
         </nav>
 
         <main class="max-w-7xl mx-auto pt-24 px-6 space-y-10">
-            <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="glass p-6 rounded-[2rem] border-b-2 border-blue-600">
                     <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Win_Rate</p>
                     <div id="stat-winrate" class="text-3xl font-header">0%</div>
                 </div>
                 <div class="glass p-6 rounded-[2rem] border-b-2 border-indigo-600">
-                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Total_Trades</p>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Trades</p>
                     <div id="stat-trades" class="text-3xl font-header">0</div>
                 </div>
                 <div class="glass p-6 rounded-[2rem] border-b-2 border-fuchsia-600">
-                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">PF (Profit Factor)</p>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">PF</p>
                     <div id="stat-pf" class="text-3xl font-header">0.00</div>
                 </div>
                 <div class="glass p-6 rounded-[2rem] border-b-2 border-emerald-600">
-                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Expectancy</p>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Exp</p>
                     <div id="stat-exp" class="text-3xl font-header">0.0</div>
                 </div>
             </section>
@@ -65,32 +66,32 @@
     <div id="view-detail" class="hidden fixed inset-0 z-[100] bg-black overflow-y-auto p-4 md:p-10">
         <div class="max-w-5xl mx-auto space-y-10">
             <header class="flex justify-between items-center border-b border-white/10 pb-8">
-                <button onclick="closeDetail()" class="text-[10px] font-header text-slate-500 hover:text-white uppercase tracking-widest">← Return_to_Base</button>
+                <button onclick="closeDetail()" class="text-[10px] font-header text-slate-500 hover:text-white uppercase tracking-widest">← Back_to_Dash</button>
                 <div id="det-id" class="text-[9px] font-mono opacity-30 tracking-widest">ID_UNKNOWN</div>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <div class="lg:col-span-1 space-y-6">
                     <div class="glass p-8 rounded-[2.5rem] sticky top-10 space-y-6">
-                        <h2 class="text-xs font-header text-blue-500 tracking-widest uppercase">Add_Trade_Log</h2>
+                        <h2 class="text-xs font-header text-blue-500 tracking-widest uppercase">Add_Log</h2>
                         <div class="space-y-4 text-xs">
-                            <input id="log-pnl" type="number" placeholder="PNL (Amount/pips)" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none">
+                            <input id="log-pnl" type="number" placeholder="PNL (数値)" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none">
                             <select id="log-mood" class="w-full bg-black border border-white/10 p-4 rounded-xl outline-none">
-                                <option value="Calm">CALM (冷静)</option>
-                                <option value="Greed">GREED (強欲)</option>
-                                <option value="Fear">FEAR (恐怖)</option>
-                                <option value="Revenge">REVENGE (リベンジ)</option>
+                                <option value="CALM">CALM (冷静)</option>
+                                <option value="GREED">GREED (強欲)</option>
+                                <option value="FEAR">FEAR (恐怖)</option>
+                                <option value="REVENGE">REVENGE (リベンジ)</option>
                             </select>
-                            <textarea id="log-body" placeholder="Trade Reason / Notes..." class="w-full bg-white/5 border border-white/10 p-4 rounded-xl h-40 outline-none resize-none"></textarea>
+                            <textarea id="log-body" placeholder="Notes..." class="w-full bg-white/5 border border-white/10 p-4 rounded-xl h-40 outline-none resize-none"></textarea>
                             <input type="file" id="log-img" accept="image/*" class="w-full text-[10px]">
-                            <button onclick="addLog()" class="w-full bg-white text-black font-black py-4 rounded-xl font-header text-[10px] uppercase hover:bg-blue-500 transition">Commit_Log</button>
+                            <button onclick="addLog()" class="w-full bg-white text-black font-black py-4 rounded-xl font-header text-[10px] uppercase hover:bg-blue-500 transition">Save_Log</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-8">
-                    <div id="det-header" class="space-y-4">
-                        <h2 id="det-title" class="text-5xl font-black italic tracking-tighter uppercase leading-none">TITLE</h2>
+                    <div>
+                        <h2 id="det-title" class="text-5xl font-black italic tracking-tighter uppercase leading-none mb-2">TITLE</h2>
                         <p id="det-op" class="text-xs text-blue-500 font-bold opacity-60 font-header">OP: USER</p>
                     </div>
                     
@@ -105,16 +106,25 @@
     </div>
 
     <script>
-        let missions = JSON.parse(localStorage.getItem('mission-v5-db') || '[]');
+        // Data Store
+        let missions = JSON.parse(localStorage.getItem('mission-final-db') || '[]');
         let currentId = null;
         let pnlChart = null;
 
+        // UI Utilities
+        function showView(viewId) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-detail').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
         function save() {
-            localStorage.setItem('mission-v5-db', JSON.stringify(missions));
+            localStorage.setItem('mission-final-db', JSON.stringify(missions));
             renderDashboard();
             if(currentId) renderDetail(currentId);
         }
 
+        // Dashboard Actions
         function addMission() {
             const user = document.getElementById('in-user').value || 'ADMIN';
             const title = document.getElementById('in-title').value;
@@ -123,70 +133,27 @@
                 id: Date.now(),
                 user: user.toUpperCase(),
                 title: title.toUpperCase(),
-                progress: 10,
                 logs: []
             });
             save();
             document.getElementById('in-title').value = '';
         }
 
-        function renderDashboard() {
-            const grid = document.getElementById('mission-grid');
-            grid.innerHTML = '';
-            
-            let allLogs = missions.flatMap(m => m.logs);
-            let totalPnl = allLogs.reduce((s, l) => s + (parseFloat(l.pnl) || 0), 0);
-            let wins = allLogs.filter(l => parseFloat(l.pnl) > 0);
-            let losses = allLogs.filter(l => parseFloat(l.pnl) < 0);
-            
-            // Global Stats
-            document.getElementById('stat-pnl-all').innerText = totalPnl.toLocaleString();
-            document.getElementById('stat-pnl-all').className = totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-500';
-            document.getElementById('stat-winrate').innerText = allLogs.length ? Math.round((wins.length / allLogs.length) * 100) + '%' : '0%';
-            document.getElementById('stat-trades').innerText = allLogs.length;
-            
-            // PF Calculation
-            const winSum = wins.reduce((s, l) => s + parseFloat(l.pnl), 0);
-            const lossSum = Math.abs(losses.reduce((s, l) => s + parseFloat(l.pnl), 0));
-            document.getElementById('stat-pf').innerText = lossSum ? (winSum / lossSum).toFixed(2) : (winSum ? '∞' : '0.00');
-            document.getElementById('stat-exp').innerText = allLogs.length ? (totalPnl / allLogs.length).toFixed(1) : '0.0';
-
-            missions.forEach(m => {
-                const missionPnl = m.logs.reduce((s, l) => s + (parseFloat(l.pnl) || 0), 0);
-                const card = document.createElement('div');
-                card.className = "glass p-8 rounded-[2.5rem] card-anim cursor-pointer border-l-8 " + (missionPnl >= 0 ? 'border-emerald-500/30' : 'border-rose-500/30');
-                card.onclick = () => openDetail(m.id);
-                card.innerHTML = `
-                    <div class="flex justify-between items-center text-[9px] font-header text-blue-500 mb-6">
-                        <span>MISSION_LOG</span>
-                        <span>OP:${m.user}</span>
-                    </div>
-                    <h3 class="text-xl font-black italic tracking-tighter uppercase mb-8 h-12 overflow-hidden">${m.title}</h3>
-                    <div class="pt-6 border-t border-white/5 flex justify-between items-end">
-                        <div class="text-[10px] opacity-40 uppercase font-bold tracking-widest">Total_PNL</div>
-                        <div class="text-2xl font-header ${missionPnl >= 0 ? 'trade-win' : 'trade-loss'}">${missionPnl > 0 ? '+' : ''}${missionPnl}</div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
         function openDetail(id) {
             currentId = id;
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-detail').classList.remove('hidden');
+            showView('view-detail');
             renderDetail(id);
         }
 
         function closeDetail() {
             currentId = null;
-            document.getElementById('view-dashboard').classList.remove('hidden');
-            document.getElementById('view-detail').classList.add('hidden');
+            showView('view-dashboard');
         }
 
+        // Detail Actions
         async function addLog() {
             const m = missions.find(m => m.id === currentId);
-            const pnl = document.getElementById('log-pnl').value;
+            const pnlValue = document.getElementById('log-pnl').value;
             const mood = document.getElementById('log-mood').value;
             const body = document.getElementById('log-body').value;
             const imgFile = document.getElementById('log-img').files[0];
@@ -196,16 +163,67 @@
             m.logs.unshift({
                 id: Date.now(),
                 date: new Date().toLocaleString(),
-                pnl: parseFloat(pnl) || 0,
+                pnl: parseFloat(pnlValue) || 0,
                 mood,
                 body,
                 image: imgData
             });
             
             save();
+            // Clear inputs
             document.getElementById('log-pnl').value = '';
             document.getElementById('log-body').value = '';
             document.getElementById('log-img').value = '';
+        }
+
+        function deleteLog(logId) {
+            if(!confirm('PURGE_LOG?')) return;
+            const m = missions.find(m => m.id === currentId);
+            m.logs = m.logs.filter(l => l.id !== logId);
+            save();
+        }
+
+        // Rendering
+        function renderDashboard() {
+            const grid = document.getElementById('mission-grid');
+            grid.innerHTML = '';
+            
+            let allLogs = missions.flatMap(m => m.logs);
+            let totalPnl = allLogs.reduce((s, l) => s + l.pnl, 0);
+            let wins = allLogs.filter(l => l.pnl > 0);
+            let losses = allLogs.filter(l => l.pnl < 0);
+            
+            // Update Global Stats
+            document.getElementById('stat-pnl-all').innerText = totalPnl.toLocaleString();
+            document.getElementById('stat-pnl-all').className = totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-500';
+            document.getElementById('stat-winrate').innerText = allLogs.length ? Math.round((wins.length / allLogs.length) * 100) + '%' : '0%';
+            document.getElementById('stat-trades').innerText = allLogs.length;
+            
+            const winSum = wins.reduce((s, l) => s + l.pnl, 0);
+            const lossSum = Math.abs(losses.reduce((s, l) => s + l.pnl, 0));
+            document.getElementById('stat-pf').innerText = lossSum ? (winSum / lossSum).toFixed(2) : (winSum ? '∞' : '0.00');
+            document.getElementById('stat-exp').innerText = allLogs.length ? (totalPnl / allLogs.length).toFixed(1) : '0.0';
+
+            missions.forEach(m => {
+                const missionPnl = m.logs.reduce((s, l) => s + l.pnl, 0);
+                const card = document.createElement('div');
+                card.className = "glass p-8 rounded-[2.5rem] card-anim cursor-pointer border-l-4 " + (missionPnl >= 0 ? 'border-emerald-500' : 'border-rose-500');
+                // ここでクリックイベントを確実に付与
+                card.addEventListener('click', () => openDetail(m.id));
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-center text-[9px] font-header text-blue-500 mb-6">
+                        <span>MISSION_DATA</span>
+                        <span>OP:${m.user}</span>
+                    </div>
+                    <h3 class="text-xl font-black italic tracking-tighter uppercase mb-8 h-12 overflow-hidden">${m.title}</h3>
+                    <div class="pt-6 border-t border-white/5 flex justify-between items-end">
+                        <div class="text-[10px] opacity-40 uppercase font-bold tracking-widest">PNL_STAT</div>
+                        <div class="text-2xl font-header ${missionPnl >= 0 ? 'text-emerald-400' : 'text-rose-500'}">${missionPnl > 0 ? '+' : ''}${missionPnl}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
         function renderDetail(id) {
@@ -222,12 +240,12 @@
                 item.className = "glass p-8 rounded-[2.5rem] space-y-6 border border-white/5";
                 item.innerHTML = `
                     <div class="flex justify-between items-center border-b border-white/5 pb-4">
-                        <div class="text-[10px] font-mono text-slate-500 uppercase">${l.date} | MOOD:${l.mood}</div>
-                        <div class="text-xl font-header ${l.pnl >= 0 ? 'trade-win' : 'trade-loss'}">${l.pnl > 0 ? '+' : ''}${l.pnl}</div>
+                        <div class="text-[9px] font-mono text-slate-500 uppercase">${l.date} | ${l.mood}</div>
+                        <div class="text-xl font-header ${l.pnl >= 0 ? 'text-emerald-400' : 'text-rose-500'}">${l.pnl > 0 ? '+' : ''}${l.pnl}</div>
                     </div>
-                    <p class="text-sm text-slate-300 leading-relaxed font-light">${l.body}</p>
+                    <p class="text-sm text-slate-300 font-light whitespace-pre-wrap">${l.body}</p>
                     ${l.image ? `<img src="${l.image}" class="w-full rounded-2xl border border-white/10 mt-4 shadow-2xl">` : ''}
-                    <button onclick="deleteLog(${l.id})" class="text-[9px] text-slate-700 hover:text-red-500 transition">DELETE_LOG</button>
+                    <div class="pt-4"><button onclick="deleteLog(${l.id})" class="text-[9px] text-slate-700 hover:text-red-500 transition">DELETE_LOG</button></div>
                 `;
                 tl.appendChild(item);
             });
@@ -238,8 +256,8 @@
             const ctx = document.getElementById('pnlChart').getContext('2d');
             const data = [...logs].reverse();
             let sum = 0;
-            const labels = data.map((_, i) => i + 1);
             const values = data.map(l => sum += l.pnl);
+            const labels = values.map((_, i) => i + 1);
 
             if(pnlChart) pnlChart.destroy();
             pnlChart = new Chart(ctx, {
@@ -247,31 +265,26 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'PNL_GROWTH',
                         data: values,
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
                         fill: true,
                         tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 0
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#3b82f6'
                     }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { display: false },
-                        y: { border: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#475569', font: { size: 9 } } }
                     }
                 }
             });
-        }
-
-        function deleteLog(logId) {
-            if(!confirm('PURGE_LOG?')) return;
-            const m = missions.find(m => m.id === currentId);
-            m.logs = m.logs.filter(l => l.id !== logId);
-            save();
         }
 
         const toBase64 = file => new Promise((res, rej) => {
@@ -281,6 +294,7 @@
             r.onerror = e => rej(e);
         });
 
+        // Initialize
         renderDashboard();
     </script>
 </body>
