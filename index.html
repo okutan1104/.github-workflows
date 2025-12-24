@@ -2,87 +2,122 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1067/1067555.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Backcasting Dream 100</title>
+    <title>MISSION:100 OS</title>
     <style>
-        .progress-bar { transition: width 1s ease-in-out; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@300;700&display=swap');
+        :root { --accent: #3b82f6; }
+        body { font-family: 'JetBrains Mono', monospace; background: #000; color: #fff; overscroll-behavior: none; }
+        .font-header { font-family: 'Syncopate', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .neon-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        input, textarea, select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen pb-20">
+<body class="pb-24">
 
-    <div class="max-w-4xl mx-auto p-6">
-        <header class="py-12 text-center">
-            <h1 class="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4">
-                DREAM ROADMAP 100
-            </h1>
-            <p class="text-slate-400">未来から逆算して、今を刻む。</p>
-        </header>
-
-        <div class="grid grid-cols-3 gap-4 mb-10">
-            <div class="glass p-6 rounded-3xl border border-slate-800 text-center">
-                <div id="stat-total" class="text-3xl font-bold text-white">0</div>
-                <div class="text-xs text-slate-500 uppercase">夢の数</div>
-            </div>
-            <div class="glass p-6 rounded-3xl border border-slate-800 text-center">
-                <div id="stat-done" class="text-3xl font-bold text-emerald-400">0</div>
-                <div class="text-xs text-slate-500 uppercase">達成済み</div>
-            </div>
-            <div class="glass p-6 rounded-3xl border border-slate-800 text-center">
-                <div id="stat-rate" class="text-3xl font-bold text-indigo-400">0%</div>
-                <div class="text-xs text-slate-500 uppercase">達成率</div>
-            </div>
+    <header class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
+            <span class="text-[10px] font-bold tracking-[0.3em] font-header text-blue-500">MISSION_CONTROL_OS</span>
         </div>
+        <div class="flex gap-4">
+            <button onclick="exportJSON()" class="text-[9px] text-slate-500 hover:text-white transition uppercase">Backup_Log</button>
+            <label class="text-[9px] text-slate-500 hover:text-white transition uppercase cursor-pointer">
+                Import_Log<input type="file" class="hidden" onchange="importJSON(event)">
+            </label>
+        </div>
+    </header>
 
-        <section class="glass p-8 rounded-3xl border border-slate-700 mb-12 shadow-2xl">
-            <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                <span class="text-indigo-500">＋</span> 新しい夢を逆算して追加
-            </h2>
-            <div class="space-y-4">
-                <input id="in-title" type="text" placeholder="2030年までに達成したい夢のタイトル" class="w-full bg-slate-800 border-none rounded-xl p-4 focus:ring-2 ring-indigo-500 outline-none">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input id="in-future" type="text" placeholder="【3年後】の状態" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm outline-none">
-                    <input id="in-now" type="text" placeholder="【今日】やる最初の一歩" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm outline-none">
-                </div>
-                <button onclick="addDream()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/20">
-                    リストに追加する
-                </button>
+    <main class="max-w-5xl mx-auto pt-24 px-6 space-y-12">
+        
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass p-6 rounded-3xl text-center">
+                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Efficiency</p>
+                <div id="stat-rate" class="text-3xl font-header text-blue-400">0%</div>
+            </div>
+            <div class="glass p-6 rounded-3xl text-center">
+                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Active_Ops</p>
+                <div id="stat-active" class="text-3xl font-header text-white">0</div>
+            </div>
+            <div class="glass p-6 rounded-3xl text-center border-l-2 border-fuchsia-600">
+                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Operators</p>
+                <div id="stat-users" class="text-3xl font-header text-fuchsia-500">0</div>
+            </div>
+            <div class="glass p-6 rounded-3xl text-center">
+                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Accomplished</p>
+                <div id="stat-done" class="text-3xl font-header text-emerald-400">0</div>
             </div>
         </section>
 
-        <div id="dream-list" class="space-y-4">
+        <section class="glass p-8 rounded-[2.5rem] border-t-2 border-blue-600/50">
+            <h2 class="text-xs font-header mb-8 text-blue-500 italic">DEPLOY_NEW_MISSION_STRATEGY</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <input id="in-user" type="text" placeholder="OPERATOR_NAME" class="w-full p-4 rounded-xl text-xs outline-none focus:ring-1 ring-blue-500">
+                    <input id="in-title" type="text" placeholder="OBJECTIVE_TITLE" class="w-full p-4 rounded-xl text-xs outline-none focus:ring-1 ring-blue-500">
+                    <select id="in-cat" class="w-full p-4 rounded-xl text-xs outline-none">
+                        <option value="CORE">CORE (人生の核)</option>
+                        <option value="ASSET">ASSET (資産・富)</option>
+                        <option value="BODY">BODY (健康・肉体)</option>
+                        <option value="EXP">EXP (体験・旅行)</option>
+                    </select>
+                </div>
+                <div class="space-y-4 flex flex-col">
+                    <textarea id="in-backcast" placeholder="BACKCASTING_FLOW: [10Y] -> [3Y] -> [TODAY_STEP]" class="w-full flex-1 p-4 rounded-xl text-xs outline-none focus:ring-1 ring-blue-500 resize-none"></textarea>
+                    <button onclick="addDream()" class="bg-blue-600 hover:bg-blue-400 text-black font-black py-4 rounded-xl text-xs uppercase transition tracking-widest neon-glow">Initialize_Mission</button>
+                </div>
             </div>
-    </div>
+        </section>
+
+        <section class="space-y-6">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <h2 class="font-header text-sm tracking-widest italic text-slate-500 uppercase">Mission_Database_Feed</h2>
+                <div id="last-sync" class="text-[8px] font-mono text-slate-600 uppercase">Sync_Ready</div>
+            </div>
+            <div id="dream-feed" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </div>
+        </section>
+    </main>
 
     <script>
-        let dreams = JSON.parse(localStorage.getItem('my-dreams') || '[]');
+        let dreams = JSON.parse(localStorage.getItem('mission-100-db') || '[]');
 
         function save() {
-            localStorage.setItem('my-dreams', JSON.stringify(dreams));
+            localStorage.setItem('mission-100-db', JSON.stringify(dreams));
             render();
         }
 
         function addDream() {
+            const user = document.getElementById('in-user').value || 'ADMIN';
             const title = document.getElementById('in-title').value;
-            const future = document.getElementById('in-future').value;
-            const now = document.getElementById('in-now').value;
-
-            if (!title) return alert("タイトルを入力してください");
+            const backcast = document.getElementById('in-backcast').value;
+            const category = document.getElementById('in-cat').value;
+            if(!title) return alert("TITLE_REQUIRED");
 
             dreams.unshift({
                 id: Date.now(),
-                title,
-                future,
-                now,
+                user: user.toUpperCase(),
+                title: title.toUpperCase(),
+                backcast,
+                category,
                 progress: 10,
-                done: false
+                done: false,
+                timestamp: new Date().toISOString()
             });
-
-            // フォームクリア
+            save();
             document.getElementById('in-title').value = '';
-            document.getElementById('in-future').value = '';
-            document.getElementById('in-now').value = '';
+            document.getElementById('in-backcast').value = '';
+        }
+
+        function updateProgress(id, val) {
+            dreams = dreams.map(d => d.id === id ? {...d, progress: val, timestamp: new Date().toISOString()} : d);
             save();
         }
 
@@ -92,55 +127,69 @@
         }
 
         function deleteDream(id) {
-            if(confirm('この夢を削除しますか？')) {
+            if(confirm('PURGE_MISSION?')) {
                 dreams = dreams.filter(d => d.id !== id);
                 save();
             }
         }
 
-        function updateProgress(id, val) {
-            dreams = dreams.map(d => d.id === id ? {...d, progress: val} : d);
-            save();
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(dreams, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LOG_${new Date().getTime()}.json`;
+            a.click();
+        }
+
+        function importJSON(event) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const imported = JSON.parse(e.target.result);
+                dreams = [...imported, ...dreams].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+                save();
+            };
+            reader.readAsText(event.target.files[0]);
         }
 
         function render() {
-            const listEl = document.getElementById('dream-list');
-            listEl.innerHTML = '';
+            const feed = document.getElementById('dream-feed');
+            feed.innerHTML = '';
 
-            // Stats計算
-            document.getElementById('stat-total').innerText = dreams.length;
-            const doneCount = dreams.filter(d => d.done).length;
-            document.getElementById('stat-done').innerText = doneCount;
-            document.getElementById('stat-rate').innerText = dreams.length ? Math.round((doneCount / dreams.length) * 100) + '%' : '0%';
+            const done = dreams.filter(d => d.done).length;
+            document.getElementById('stat-rate').innerText = (dreams.length ? Math.round((done/100)*100) : 0) + '%';
+            document.getElementById('stat-active').innerText = dreams.filter(d => !d.done).length;
+            document.getElementById('stat-users').innerText = new Set(dreams.map(d => d.user)).size;
+            document.getElementById('stat-done').innerText = done;
+            document.getElementById('last-sync').innerText = "Last_Update: " + new Date().toLocaleTimeString();
 
             dreams.forEach(d => {
                 const card = document.createElement('div');
-                card.className = `glass p-6 rounded-3xl border ${d.done ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-800'} transition-all duration-500`;
+                card.className = `glass p-8 rounded-[2.5rem] flex flex-col justify-between transition-all hover:border-blue-500/50 ${d.done ? 'opacity-20' : ''}`;
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-xl font-bold ${d.done ? 'line-through text-slate-500' : 'text-white'}">${d.title}</h3>
-                            <div class="mt-2 space-y-1">
-                                <p class="text-xs text-slate-500">🚀 逆算計画:</p>
-                                <p class="text-sm text-indigo-400">3年後: ${d.future || '未設定'}</p>
-                                <p class="text-sm text-emerald-400">今日: ${d.now || '未設定'}</p>
-                            </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-blue-500 tracking-widest font-header">${d.category}</span>
+                            <span class="text-[9px] text-slate-600 font-mono italic">OP:${d.user}</span>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="toggleDone(${d.id})" class="p-2 rounded-full ${d.done ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-400'}">✓</button>
-                            <button onclick="deleteDream(${d.id})" class="p-2 rounded-full bg-slate-800 text-slate-600 hover:text-red-400">×</button>
-                        </div>
+                        <h3 class="text-xl font-bold italic tracking-tight leading-tight">${d.title}</h3>
+                        <p class="text-[10px] text-slate-400 leading-relaxed font-light whitespace-pre-wrap">${d.backcast}</p>
                     </div>
-                    <div class="flex items-center gap-4 mt-6">
-                        <input type="range" value="${d.progress}" onchange="updateProgress(${d.id}, this.value)" class="flex-1 accent-indigo-500 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        <span class="font-mono text-sm w-10">${d.progress}%</span>
+                    <div class="mt-8 pt-6 border-t border-white/5 space-y-4">
+                        <div class="flex justify-between items-center text-[9px] font-bold">
+                            <span class="tracking-widest">PROGRESS_STATUS</span>
+                            <span class="text-blue-500">${d.progress}%</span>
+                        </div>
+                        <input type="range" value="${d.progress}" oninput="updateProgress(${d.id}, this.value)" class="w-full h-[1px] bg-white/10 appearance-none cursor-pointer accent-blue-600">
+                        <div class="flex gap-2 pt-2">
+                            <button onclick="toggleDone(${d.id})" class="flex-1 text-[8px] font-bold py-2 rounded-lg border border-white/10 hover:bg-white hover:text-black transition uppercase tracking-widest">${d.done ? 'REOPEN' : 'COMPLETE'}</button>
+                            <button onclick="deleteDream(${d.id})" class="text-slate-700 hover:text-red-500 transition px-2">×</button>
+                        </div>
                     </div>
                 `;
-                listEl.appendChild(card);
+                feed.appendChild(card);
             });
         }
-
-        // 初期表示
         render();
     </script>
 </body>
