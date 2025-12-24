@@ -3,194 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1067/1067555.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>MISSION:100 OS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>MISSION CONTROL OS v5</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@300;700&display=swap');
-        :root { --accent: #3b82f6; }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@400;700&display=swap');
         body { font-family: 'JetBrains Mono', monospace; background: #000; color: #fff; overscroll-behavior: none; }
         .font-header { font-family: 'Syncopate', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .neon-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
-        input, textarea, select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
-        ::-webkit-scrollbar { display: none; }
+        .glass { background: rgba(255, 255, 255, 0.01); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); }
+        .neon-blue { color: #3b82f6; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        .trade-win { color: #10b981; }
+        .trade-loss { color: #f43f5e; }
+        .hidden { display: none; }
+        input[type="range"] { -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #3b82f6; border-radius: 50%; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-10">
 
-    <header class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-3 flex justify-between items-center">
-        <div class="flex items-center gap-4">
-            <div class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
-            <span class="text-[10px] font-bold tracking-[0.3em] font-header text-blue-500">MISSION_CONTROL_OS</span>
+    <div id="view-dashboard" class="transition-opacity duration-500">
+        <nav class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
+                <h1 class="text-[10px] font-header tracking-[0.3em] text-blue-500 uppercase">Strategy_Command_Center</h1>
+            </div>
+            <div id="global-pnl" class="font-header text-xs tracking-tighter">PNL: <span id="stat-pnl-all">0</span></div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto pt-24 px-6 space-y-10">
+            <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass p-6 rounded-[2rem] border-b-2 border-blue-600">
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Win_Rate</p>
+                    <div id="stat-winrate" class="text-3xl font-header">0%</div>
+                </div>
+                <div class="glass p-6 rounded-[2rem] border-b-2 border-indigo-600">
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Total_Trades</p>
+                    <div id="stat-trades" class="text-3xl font-header">0</div>
+                </div>
+                <div class="glass p-6 rounded-[2rem] border-b-2 border-fuchsia-600">
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">PF (Profit Factor)</p>
+                    <div id="stat-pf" class="text-3xl font-header">0.00</div>
+                </div>
+                <div class="glass p-6 rounded-[2rem] border-b-2 border-emerald-600">
+                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-2">Expectancy</p>
+                    <div id="stat-exp" class="text-3xl font-header">0.0</div>
+                </div>
+            </section>
+
+            <section class="glass p-8 rounded-[2.5rem]">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input id="in-user" type="text" placeholder="OPERATOR" class="bg-white/5 border border-white/10 p-4 rounded-xl text-xs outline-none">
+                    <input id="in-title" type="text" placeholder="MISSION_OBJECTIVE" class="md:col-span-2 bg-white/5 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-blue-500 transition">
+                    <button onclick="addMission()" class="bg-blue-600 hover:bg-blue-400 text-black font-black py-4 rounded-xl text-[10px] font-header transition uppercase tracking-widest">Execute</button>
+                </div>
+            </section>
+
+            <div id="mission-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </main>
+    </div>
+
+    <div id="view-detail" class="hidden fixed inset-0 z-[100] bg-black overflow-y-auto p-4 md:p-10">
+        <div class="max-w-5xl mx-auto space-y-10">
+            <header class="flex justify-between items-center border-b border-white/10 pb-8">
+                <button onclick="closeDetail()" class="text-[10px] font-header text-slate-500 hover:text-white uppercase tracking-widest">← Return_to_Base</button>
+                <div id="det-id" class="text-[9px] font-mono opacity-30 tracking-widest">ID_UNKNOWN</div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass p-8 rounded-[2.5rem] sticky top-10 space-y-6">
+                        <h2 class="text-xs font-header text-blue-500 tracking-widest uppercase">Add_Trade_Log</h2>
+                        <div class="space-y-4 text-xs">
+                            <input id="log-pnl" type="number" placeholder="PNL (Amount/pips)" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none">
+                            <select id="log-mood" class="w-full bg-black border border-white/10 p-4 rounded-xl outline-none">
+                                <option value="Calm">CALM (冷静)</option>
+                                <option value="Greed">GREED (強欲)</option>
+                                <option value="Fear">FEAR (恐怖)</option>
+                                <option value="Revenge">REVENGE (リベンジ)</option>
+                            </select>
+                            <textarea id="log-body" placeholder="Trade Reason / Notes..." class="w-full bg-white/5 border border-white/10 p-4 rounded-xl h-40 outline-none resize-none"></textarea>
+                            <input type="file" id="log-img" accept="image/*" class="w-full text-[10px]">
+                            <button onclick="addLog()" class="w-full bg-white text-black font-black py-4 rounded-xl font-header text-[10px] uppercase hover:bg-blue-500 transition">Commit_Log</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-8">
+                    <div id="det-header" class="space-y-4">
+                        <h2 id="det-title" class="text-5xl font-black italic tracking-tighter uppercase leading-none">TITLE</h2>
+                        <p id="det-op" class="text-xs text-blue-500 font-bold opacity-60 font-header">OP: USER</p>
+                    </div>
+                    
+                    <div class="glass p-8 rounded-[3rem]">
+                        <canvas id="pnlChart" class="w-full h-48"></canvas>
+                    </div>
+
+                    <div id="det-timeline" class="space-y-4"></div>
+                </div>
+            </div>
         </div>
-        <div class="flex gap-4">
-            <button onclick="exportJSON()" class="text-[9px] text-slate-500 hover:text-white transition uppercase">Backup_Log</button>
-            <label class="text-[9px] text-slate-500 hover:text-white transition uppercase cursor-pointer">
-                Import_Log<input type="file" class="hidden" onchange="importJSON(event)">
-            </label>
-        </div>
-    </header>
-
-    <main class="max-w-5xl mx-auto pt-24 px-6 space-y-12">
-        
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="glass p-6 rounded-3xl text-center">
-                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Efficiency</p>
-                <div id="stat-rate" class="text-3xl font-header text-blue-400">0%</div>
-            </div>
-            <div class="glass p-6 rounded-3xl text-center">
-                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Active_Ops</p>
-                <div id="stat-active" class="text-3xl font-header text-white">0</div>
-            </div>
-            <div class="glass p-6 rounded-3xl text-center border-l-2 border-fuchsia-600">
-                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Operators</p>
-                <div id="stat-users" class="text-3xl font-header text-fuchsia-500">0</div>
-            </div>
-            <div class="glass p-6 rounded-3xl text-center">
-                <p class="text-[9px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Accomplished</p>
-                <div id="stat-done" class="text-3xl font-header text-emerald-400">0</div>
-            </div>
-        </section>
-
-        <section class="glass p-8 rounded-[2.5rem] border-t-2 border-blue-600/50">
-            <h2 class="text-xs font-header mb-8 text-blue-500 italic">DEPLOY_NEW_MISSION_STRATEGY</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <input id="in-user" type="text" placeholder="OPERATOR_NAME" class="w-full p-4 rounded-xl text-xs outline-none focus:ring-1 ring-blue-500">
-                    <input id="in-title" type="text" placeholder="OBJECTIVE_TITLE" class="w-full p-4 rounded-xl text-xs outline-none focus:ring-1 ring-blue-500">
-                    <select id="in-cat" class="w-full p-4 rounded-xl text-xs outline-none">
-                        <option value="CORE">CORE (人生の核)</option>
-                        <option value="ASSET">ASSET (資産・富)</option>
-                        <option value="BODY">BODY (健康・肉体)</option>
-                        <option value="EXP">EXP (体験・旅行)</option>
-                    </select>
-                </div>
-                <div class="space-y-4 flex flex-col">
-                    <textarea id="in-backcast" placeholder="BACKCASTING_FLOW: [10Y] -> [3Y] -> [TODAY_STEP]" class="w-full flex-1 p-4 rounded-xl text-xs outline-none focus:ring-1 ring-blue-500 resize-none"></textarea>
-                    <button onclick="addDream()" class="bg-blue-600 hover:bg-blue-400 text-black font-black py-4 rounded-xl text-xs uppercase transition tracking-widest neon-glow">Initialize_Mission</button>
-                </div>
-            </div>
-        </section>
-
-        <section class="space-y-6">
-            <div class="flex justify-between items-center border-b border-white/10 pb-4">
-                <h2 class="font-header text-sm tracking-widest italic text-slate-500 uppercase">Mission_Database_Feed</h2>
-                <div id="last-sync" class="text-[8px] font-mono text-slate-600 uppercase">Sync_Ready</div>
-            </div>
-            <div id="dream-feed" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                </div>
-        </section>
-    </main>
+    </div>
 
     <script>
-        let dreams = JSON.parse(localStorage.getItem('mission-100-db') || '[]');
+        let missions = JSON.parse(localStorage.getItem('mission-v5-db') || '[]');
+        let currentId = null;
+        let pnlChart = null;
 
         function save() {
-            localStorage.setItem('mission-100-db', JSON.stringify(dreams));
-            render();
+            localStorage.setItem('mission-v5-db', JSON.stringify(missions));
+            renderDashboard();
+            if(currentId) renderDetail(currentId);
         }
 
-        function addDream() {
+        function addMission() {
             const user = document.getElementById('in-user').value || 'ADMIN';
             const title = document.getElementById('in-title').value;
-            const backcast = document.getElementById('in-backcast').value;
-            const category = document.getElementById('in-cat').value;
-            if(!title) return alert("TITLE_REQUIRED");
-
-            dreams.unshift({
+            if(!title) return;
+            missions.unshift({
                 id: Date.now(),
                 user: user.toUpperCase(),
                 title: title.toUpperCase(),
-                backcast,
-                category,
                 progress: 10,
-                done: false,
-                timestamp: new Date().toISOString()
+                logs: []
             });
             save();
             document.getElementById('in-title').value = '';
-            document.getElementById('in-backcast').value = '';
         }
 
-        function updateProgress(id, val) {
-            dreams = dreams.map(d => d.id === id ? {...d, progress: val, timestamp: new Date().toISOString()} : d);
-            save();
-        }
+        function renderDashboard() {
+            const grid = document.getElementById('mission-grid');
+            grid.innerHTML = '';
+            
+            let allLogs = missions.flatMap(m => m.logs);
+            let totalPnl = allLogs.reduce((s, l) => s + (parseFloat(l.pnl) || 0), 0);
+            let wins = allLogs.filter(l => parseFloat(l.pnl) > 0);
+            let losses = allLogs.filter(l => parseFloat(l.pnl) < 0);
+            
+            // Global Stats
+            document.getElementById('stat-pnl-all').innerText = totalPnl.toLocaleString();
+            document.getElementById('stat-pnl-all').className = totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-500';
+            document.getElementById('stat-winrate').innerText = allLogs.length ? Math.round((wins.length / allLogs.length) * 100) + '%' : '0%';
+            document.getElementById('stat-trades').innerText = allLogs.length;
+            
+            // PF Calculation
+            const winSum = wins.reduce((s, l) => s + parseFloat(l.pnl), 0);
+            const lossSum = Math.abs(losses.reduce((s, l) => s + parseFloat(l.pnl), 0));
+            document.getElementById('stat-pf').innerText = lossSum ? (winSum / lossSum).toFixed(2) : (winSum ? '∞' : '0.00');
+            document.getElementById('stat-exp').innerText = allLogs.length ? (totalPnl / allLogs.length).toFixed(1) : '0.0';
 
-        function toggleDone(id) {
-            dreams = dreams.map(d => d.id === id ? {...d, done: !d.done, progress: !d.done ? 100 : 10} : d);
-            save();
-        }
-
-        function deleteDream(id) {
-            if(confirm('PURGE_MISSION?')) {
-                dreams = dreams.filter(d => d.id !== id);
-                save();
-            }
-        }
-
-        function exportJSON() {
-            const blob = new Blob([JSON.stringify(dreams, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `LOG_${new Date().getTime()}.json`;
-            a.click();
-        }
-
-        function importJSON(event) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const imported = JSON.parse(e.target.result);
-                dreams = [...imported, ...dreams].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
-                save();
-            };
-            reader.readAsText(event.target.files[0]);
-        }
-
-        function render() {
-            const feed = document.getElementById('dream-feed');
-            feed.innerHTML = '';
-
-            const done = dreams.filter(d => d.done).length;
-            document.getElementById('stat-rate').innerText = (dreams.length ? Math.round((done/100)*100) : 0) + '%';
-            document.getElementById('stat-active').innerText = dreams.filter(d => !d.done).length;
-            document.getElementById('stat-users').innerText = new Set(dreams.map(d => d.user)).size;
-            document.getElementById('stat-done').innerText = done;
-            document.getElementById('last-sync').innerText = "Last_Update: " + new Date().toLocaleTimeString();
-
-            dreams.forEach(d => {
+            missions.forEach(m => {
+                const missionPnl = m.logs.reduce((s, l) => s + (parseFloat(l.pnl) || 0), 0);
                 const card = document.createElement('div');
-                card.className = `glass p-8 rounded-[2.5rem] flex flex-col justify-between transition-all hover:border-blue-500/50 ${d.done ? 'opacity-20' : ''}`;
+                card.className = "glass p-8 rounded-[2.5rem] card-anim cursor-pointer border-l-8 " + (missionPnl >= 0 ? 'border-emerald-500/30' : 'border-rose-500/30');
+                card.onclick = () => openDetail(m.id);
                 card.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[9px] font-bold text-blue-500 tracking-widest font-header">${d.category}</span>
-                            <span class="text-[9px] text-slate-600 font-mono italic">OP:${d.user}</span>
-                        </div>
-                        <h3 class="text-xl font-bold italic tracking-tight leading-tight">${d.title}</h3>
-                        <p class="text-[10px] text-slate-400 leading-relaxed font-light whitespace-pre-wrap">${d.backcast}</p>
+                    <div class="flex justify-between items-center text-[9px] font-header text-blue-500 mb-6">
+                        <span>MISSION_LOG</span>
+                        <span>OP:${m.user}</span>
                     </div>
-                    <div class="mt-8 pt-6 border-t border-white/5 space-y-4">
-                        <div class="flex justify-between items-center text-[9px] font-bold">
-                            <span class="tracking-widest">PROGRESS_STATUS</span>
-                            <span class="text-blue-500">${d.progress}%</span>
-                        </div>
-                        <input type="range" value="${d.progress}" oninput="updateProgress(${d.id}, this.value)" class="w-full h-[1px] bg-white/10 appearance-none cursor-pointer accent-blue-600">
-                        <div class="flex gap-2 pt-2">
-                            <button onclick="toggleDone(${d.id})" class="flex-1 text-[8px] font-bold py-2 rounded-lg border border-white/10 hover:bg-white hover:text-black transition uppercase tracking-widest">${d.done ? 'REOPEN' : 'COMPLETE'}</button>
-                            <button onclick="deleteDream(${d.id})" class="text-slate-700 hover:text-red-500 transition px-2">×</button>
-                        </div>
+                    <h3 class="text-xl font-black italic tracking-tighter uppercase mb-8 h-12 overflow-hidden">${m.title}</h3>
+                    <div class="pt-6 border-t border-white/5 flex justify-between items-end">
+                        <div class="text-[10px] opacity-40 uppercase font-bold tracking-widest">Total_PNL</div>
+                        <div class="text-2xl font-header ${missionPnl >= 0 ? 'trade-win' : 'trade-loss'}">${missionPnl > 0 ? '+' : ''}${missionPnl}</div>
                     </div>
                 `;
-                feed.appendChild(card);
+                grid.appendChild(card);
             });
         }
-        render();
+
+        function openDetail(id) {
+            currentId = id;
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-detail').classList.remove('hidden');
+            renderDetail(id);
+        }
+
+        function closeDetail() {
+            currentId = null;
+            document.getElementById('view-dashboard').classList.remove('hidden');
+            document.getElementById('view-detail').classList.add('hidden');
+        }
+
+        async function addLog() {
+            const m = missions.find(m => m.id === currentId);
+            const pnl = document.getElementById('log-pnl').value;
+            const mood = document.getElementById('log-mood').value;
+            const body = document.getElementById('log-body').value;
+            const imgFile = document.getElementById('log-img').files[0];
+            
+            let imgData = imgFile ? await toBase64(imgFile) : "";
+
+            m.logs.unshift({
+                id: Date.now(),
+                date: new Date().toLocaleString(),
+                pnl: parseFloat(pnl) || 0,
+                mood,
+                body,
+                image: imgData
+            });
+            
+            save();
+            document.getElementById('log-pnl').value = '';
+            document.getElementById('log-body').value = '';
+            document.getElementById('log-img').value = '';
+        }
+
+        function renderDetail(id) {
+            const m = missions.find(m => m.id === id);
+            document.getElementById('det-title').innerText = m.title;
+            document.getElementById('det-op').innerText = `OPERATOR: ${m.user}`;
+            document.getElementById('det-id').innerText = `ID_${m.id}`;
+
+            const tl = document.getElementById('det-timeline');
+            tl.innerHTML = '';
+            
+            m.logs.forEach(l => {
+                const item = document.createElement('div');
+                item.className = "glass p-8 rounded-[2.5rem] space-y-6 border border-white/5";
+                item.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                        <div class="text-[10px] font-mono text-slate-500 uppercase">${l.date} | MOOD:${l.mood}</div>
+                        <div class="text-xl font-header ${l.pnl >= 0 ? 'trade-win' : 'trade-loss'}">${l.pnl > 0 ? '+' : ''}${l.pnl}</div>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed font-light">${l.body}</p>
+                    ${l.image ? `<img src="${l.image}" class="w-full rounded-2xl border border-white/10 mt-4 shadow-2xl">` : ''}
+                    <button onclick="deleteLog(${l.id})" class="text-[9px] text-slate-700 hover:text-red-500 transition">DELETE_LOG</button>
+                `;
+                tl.appendChild(item);
+            });
+            renderChart(m.logs);
+        }
+
+        function renderChart(logs) {
+            const ctx = document.getElementById('pnlChart').getContext('2d');
+            const data = [...logs].reverse();
+            let sum = 0;
+            const labels = data.map((_, i) => i + 1);
+            const values = data.map(l => sum += l.pnl);
+
+            if(pnlChart) pnlChart.destroy();
+            pnlChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'PNL_GROWTH',
+                        data: values,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { border: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+
+        function deleteLog(logId) {
+            if(!confirm('PURGE_LOG?')) return;
+            const m = missions.find(m => m.id === currentId);
+            m.logs = m.logs.filter(l => l.id !== logId);
+            save();
+        }
+
+        const toBase64 = file => new Promise((res, rej) => {
+            const r = new FileReader();
+            r.readAsDataURL(file);
+            r.onload = () => res(r.result);
+            r.onerror = e => rej(e);
+        });
+
+        renderDashboard();
     </script>
 </body>
 </html>
