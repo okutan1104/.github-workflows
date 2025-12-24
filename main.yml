@@ -1,0 +1,136 @@
+name: Life-Roadmap-Dashboard-Pro
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened]
+  workflow_dispatch:
+    inputs:
+      user_name:
+        description: '表示名'
+        default: 'My'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Data Mining & Analysis
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              labels: 'dream'
+            });
+
+            const totalDreams = 100;
+            const activeDreams = issues.data.length;
+            const completedDreams = issues.data.filter(i => i.state === 'closed').length;
+            const totalProgress = issues.data.reduce((acc, issue) => {
+              const match = issue.body.match(/Progress:\s*(\d+)%/);
+              return acc + (issue.state === 'closed' ? 100 : (match ? parseInt(match[1]) : 0));
+            }, 0);
+
+            const dreams = issues.data.map(issue => {
+              const progressMatch = issue.body.match(/Progress:\s*(\d+)%/);
+              return {
+                title: issue.title,
+                url: issue.html_url,
+                status: issue.state,
+                progress: issue.state === 'closed' ? 100 : (progressMatch ? parseInt(progressMatch[1]) : 0),
+                tags: issue.labels.map(l => l.name).filter(n => n !== 'dream')
+              };
+            });
+
+            const stats = {
+              count: activeDreams,
+              completed: completedDreams,
+              achievement_rate: Math.round((completedDreams / totalDreams) * 100),
+              avg_progress: activeDreams ? Math.round(totalProgress / activeDreams) : 0
+            };
+
+            fs.writeFileSync('data.json', JSON.stringify({ dreams, stats }));
+
+      - name: Build Pro Dashboard
+        run: |
+          USER_NAME="${{ github.event.inputs.user_name || 'My' }}"
+          cat <<EOF > index.html
+          <!DOCTYPE html>
+          <html lang="ja">
+          <head>
+              <meta charset="UTF-8">
+              <script src="https://cdn.tailwindcss.com"></script>
+              <title>$USER_NAME Life Roadmap</title>
+          </head>
+          <body class="bg-black text-slate-200 font-sans min-h-screen">
+              <div class="max-w-5xl mx-auto p-6 md:p-12">
+                  <div id="stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"></div>
+                  
+                  <h2 class="text-2xl font-bold mb-6 border-l-4 border-indigo-500 pl-4">Dream Roadmap 100</h2>
+                  <div id="grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+              </div>
+
+              <script>
+                  fetch('./data.json').then(r => r.json()).then(res => {
+                      const { dreams, stats } = res;
+                      
+                      // Render Stats
+                      document.getElementById('stats').innerHTML = \`
+                          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center">
+                              <p class="text-slate-500 text-xs mb-1">達成済み</p>
+                              <p class="text-3xl font-black text-indigo-400">\${stats.completed}/100</p>
+                          </div>
+                          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center">
+                              <p class="text-slate-500 text-xs mb-1">全達成率</p>
+                              <p class="text-3xl font-black text-emerald-400">\${stats.achievement_rate}%</p>
+                          </div>
+                          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center">
+                              <p class="text-slate-500 text-xs mb-1">平均進捗</p>
+                              <p class="text-3xl font-black text-blue-400">\${stats.avg_progress}%</p>
+                          </div>
+                          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center">
+                              <p class="text-slate-500 text-xs mb-1">登録数</p>
+                              <p class="text-3xl font-black text-purple-400">\${stats.count}</p>
+                          </div>
+                      \`;
+
+                      // Render Dreams
+                      const grid = document.getElementById('grid');
+                      dreams.sort((a,b) => b.progress - a.progress).forEach(d => {
+                          const isDone = d.status === 'closed';
+                          grid.innerHTML += \`
+                              <a href="\${d.url}" target="_blank" class="group block p-6 bg-slate-900 border \${isDone ? 'border-emerald-900/50 bg-emerald-950/10' : 'border-slate-800'} rounded-3xl hover:scale-[1.02] transition-all">
+                                  <div class="flex justify-between items-start mb-4">
+                                      <h3 class="font-bold text-lg group-hover:text-indigo-400 transition">\${d.title}</h3>
+                                      \${isDone ? '<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Done</span>' : ''}
+                                  </div>
+                                  <div class="flex gap-2 mb-4">\${d.tags.map(t => '<span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">#'+t+'</span>').join('')}</div>
+                                  <div class="flex items-center gap-4">
+                                      <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                                          <div class="bg-gradient-to-r from-indigo-600 to-blue-400 h-full transition-all duration-1000" style="width: \${d.progress}%"></div>
+                                      </div>
+                                      <span class="text-sm font-mono text-slate-400">\${d.progress}%</span>
+                                  </div>
+                              </a>\`;
+                      });
+                  });
+              </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
