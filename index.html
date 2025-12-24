@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Backcasting Dream 100</title>
+    <style>
+        .progress-bar { transition: width 1s ease-in-out; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen pb-20">
+
+    <div class="max-w-4xl mx-auto p-6">
+        <header class="py-12 text-center">
+            <h1 class="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4">
+                DREAM ROADMAP 100
+            </h1>
+            <p class="text-slate-400">未来から逆算して、今を刻む。</p>
+        </header>
+
+        <div class="grid grid-cols-3 gap-4 mb-10">
+            <div class="glass p-6 rounded-3xl border border-slate-800 text-center">
+                <div id="stat-total" class="text-3xl font-bold text-white">0</div>
+                <div class="text-xs text-slate-500 uppercase">夢の数</div>
+            </div>
+            <div class="glass p-6 rounded-3xl border border-slate-800 text-center">
+                <div id="stat-done" class="text-3xl font-bold text-emerald-400">0</div>
+                <div class="text-xs text-slate-500 uppercase">達成済み</div>
+            </div>
+            <div class="glass p-6 rounded-3xl border border-slate-800 text-center">
+                <div id="stat-rate" class="text-3xl font-bold text-indigo-400">0%</div>
+                <div class="text-xs text-slate-500 uppercase">達成率</div>
+            </div>
+        </div>
+
+        <section class="glass p-8 rounded-3xl border border-slate-700 mb-12 shadow-2xl">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                <span class="text-indigo-500">＋</span> 新しい夢を逆算して追加
+            </h2>
+            <div class="space-y-4">
+                <input id="in-title" type="text" placeholder="2030年までに達成したい夢のタイトル" class="w-full bg-slate-800 border-none rounded-xl p-4 focus:ring-2 ring-indigo-500 outline-none">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input id="in-future" type="text" placeholder="【3年後】の状態" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm outline-none">
+                    <input id="in-now" type="text" placeholder="【今日】やる最初の一歩" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm outline-none">
+                </div>
+                <button onclick="addDream()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/20">
+                    リストに追加する
+                </button>
+            </div>
+        </section>
+
+        <div id="dream-list" class="space-y-4">
+            </div>
+    </div>
+
+    <script>
+        let dreams = JSON.parse(localStorage.getItem('my-dreams') || '[]');
+
+        function save() {
+            localStorage.setItem('my-dreams', JSON.stringify(dreams));
+            render();
+        }
+
+        function addDream() {
+            const title = document.getElementById('in-title').value;
+            const future = document.getElementById('in-future').value;
+            const now = document.getElementById('in-now').value;
+
+            if (!title) return alert("タイトルを入力してください");
+
+            dreams.unshift({
+                id: Date.now(),
+                title,
+                future,
+                now,
+                progress: 10,
+                done: false
+            });
+
+            // フォームクリア
+            document.getElementById('in-title').value = '';
+            document.getElementById('in-future').value = '';
+            document.getElementById('in-now').value = '';
+            save();
+        }
+
+        function toggleDone(id) {
+            dreams = dreams.map(d => d.id === id ? {...d, done: !d.done, progress: !d.done ? 100 : 10} : d);
+            save();
+        }
+
+        function deleteDream(id) {
+            if(confirm('この夢を削除しますか？')) {
+                dreams = dreams.filter(d => d.id !== id);
+                save();
+            }
+        }
+
+        function updateProgress(id, val) {
+            dreams = dreams.map(d => d.id === id ? {...d, progress: val} : d);
+            save();
+        }
+
+        function render() {
+            const listEl = document.getElementById('dream-list');
+            listEl.innerHTML = '';
+
+            // Stats計算
+            document.getElementById('stat-total').innerText = dreams.length;
+            const doneCount = dreams.filter(d => d.done).length;
+            document.getElementById('stat-done').innerText = doneCount;
+            document.getElementById('stat-rate').innerText = dreams.length ? Math.round((doneCount / dreams.length) * 100) + '%' : '0%';
+
+            dreams.forEach(d => {
+                const card = document.createElement('div');
+                card.className = `glass p-6 rounded-3xl border ${d.done ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-800'} transition-all duration-500`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold ${d.done ? 'line-through text-slate-500' : 'text-white'}">${d.title}</h3>
+                            <div class="mt-2 space-y-1">
+                                <p class="text-xs text-slate-500">🚀 逆算計画:</p>
+                                <p class="text-sm text-indigo-400">3年後: ${d.future || '未設定'}</p>
+                                <p class="text-sm text-emerald-400">今日: ${d.now || '未設定'}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="toggleDone(${d.id})" class="p-2 rounded-full ${d.done ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-400'}">✓</button>
+                            <button onclick="deleteDream(${d.id})" class="p-2 rounded-full bg-slate-800 text-slate-600 hover:text-red-400">×</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 mt-6">
+                        <input type="range" value="${d.progress}" onchange="updateProgress(${d.id}, this.value)" class="flex-1 accent-indigo-500 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <span class="font-mono text-sm w-10">${d.progress}%</span>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        // 初期表示
+        render();
+    </script>
+</body>
+</html>
